@@ -15,7 +15,7 @@ class User(db.Model):
     fullname = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(80), nullable=False)
 
-    favorites = db.relationship('Favorite', secondary=user_favorites, back_populates='users', uselist=True)
+    favorites = db.relationship('Favorite', secondary=user_favorites, back_populates='users')
 
 
     def serialize(self):
@@ -23,7 +23,7 @@ class User(db.Model):
             "id": self.id,
             "fullname": self.fullname,
             "email":self.fullname,
-            "favorites": [favorite.serialize() for favorite in self.favorites]
+            "favorites": list(map(lambda item: item.serialize(), self.favorites))
         }
 
 
@@ -101,7 +101,7 @@ class Favorite(db.Model):
             "nature": self.nature.value,
             "nature_id": self.nature_id,
             "user_id": self.nature_id,
-            "users": self.users
+          
             
         }
 

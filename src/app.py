@@ -154,12 +154,12 @@ def get_all_users():
 @app.route("/users/favorites", methods=["GET"])
 def get_user_favorites():
     try:
-        user = Favorite()
-        user = user.query.all()
+        user = User()
+        user = user.query.get(2)
 
-        print(user[0].serialize())
+        print(user)
 
-        return jsonify("trabajando por usted"),200
+        return jsonify(user.serialize()),200
     except Exception as err:
         return jsonify(f"Error: {err.args}"), 500
     
@@ -167,21 +167,28 @@ def get_user_favorites():
 @app.route("/favorite/planet/<int:planet_id>", methods=["POST"])
 def add_favorites_planet(planet_id=None):
     try:
-        body = request.json
-
-        planet = Planet.query.get(planet_id)
-
-        if planet is None:
-            return jsonify({"message":"user not found"}), 404
-        else:
-            fav = Favorite(nature="PLANET", nature_id=planet_id, user_id=body["user_id"])
-           
-            
-            db.session.add(fav)
-            db.session.commit()
-
-            return jsonify("user guardado exitosamente"), 201
-
+        body = request.json 
+        user_id = body.get("user_id") 
+        
+        if not user_id: 
+            return jsonify({"message": "user_id is required"}), 400 
+        
+        user = User.query.get(user_id) 
+        planet = Planet.query.get(planet_id) 
+        
+        if not user or not planet: 
+            return jsonify({"message": "User or People not found"}), 404 
+        
+        favorite = Favorite(nature="PLANET", nature_id=planet_id, user_id=user_id) 
+        
+        db.session.add(favorite) 
+        db.session.commit() 
+        
+        # Añadir la relación en la tabla de asociación 
+        user.favorites.append(favorite) 
+        db.session.commit() 
+        return jsonify({"message": "People added to favorites successfully"}), 201
+    
     except Exception as err:
         return jsonify(f"Error: {err.args}"), 500
     
@@ -190,22 +197,28 @@ def add_favorites_planet(planet_id=None):
 def add_favorites_prople(people_id=None):
     try:
          
-        body = request.json
+        body = request.json 
+        user_id = body.get("user_id") 
+        
+        if not user_id: 
+            return jsonify({"message": "user_id is required"}), 400 
+        
+        user = User.query.get(user_id) 
+        people = People.query.get(people_id) 
+        
+        if not user or not people: 
+            return jsonify({"message": "User or People not found"}), 404 
+        
+        favorite = Favorite(nature="PEOPLE", nature_id=people_id, user_id=user_id) 
+        
+        db.session.add(favorite) 
+        db.session.commit() 
+        
+        # Añadir la relación en la tabla de asociación 
+        user.favorites.append(favorite) 
+        db.session.commit() 
+        return jsonify({"message": "People added to favorites successfully"}), 201
 
-        people = People.query.get(people_id)
-
-        if people is None:
-            return jsonify({"message":"user not found"}), 404
-        else:
-            fav = Favorite()
-            fav.nature = "PEOPLE"
-            fav.nature_id = people_id
-            fav.user_id = body["user_id"]
-            
-            db.session.add(fav)
-            db.session.commit()
-
-            return jsonify("user guardado exitosamente"), 201
 
     except Exception as err:
         return jsonify(f"Error: {err.args}"), 500
