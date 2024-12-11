@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, People, Planet, Favorite
+from models import db, User, People, Planet, Favorite, user_favorites
 #from models import Person
 import requests
 
@@ -154,10 +154,10 @@ def get_all_users():
 @app.route("/users/favorites", methods=["GET"])
 def get_user_favorites():
     try:
-        user = User()
-        user = user.query.get(2)
+        body = request.json
 
-        print(user)
+        user = User()
+        user = user.query.get(body["user_id"])
 
         return jsonify(user.serialize()),200
     except Exception as err:
@@ -177,7 +177,7 @@ def add_favorites_planet(planet_id=None):
         planet = Planet.query.get(planet_id) 
         
         if not user or not planet: 
-            return jsonify({"message": "User or People not found"}), 404 
+            return jsonify({"message": "User or Planet not found"}), 404 
         
         favorite = Favorite(nature="PLANET", nature_id=planet_id, user_id=user_id) 
         
@@ -187,7 +187,8 @@ def add_favorites_planet(planet_id=None):
         # Añadir la relación en la tabla de asociación 
         user.favorites.append(favorite) 
         db.session.commit() 
-        return jsonify({"message": "People added to favorites successfully"}), 201
+
+        return jsonify({"message": "Planet save success"}), 201
     
     except Exception as err:
         return jsonify(f"Error: {err.args}"), 500
@@ -217,12 +218,54 @@ def add_favorites_prople(people_id=None):
         # Añadir la relación en la tabla de asociación 
         user.favorites.append(favorite) 
         db.session.commit() 
-        return jsonify({"message": "People added to favorites successfully"}), 201
+        return jsonify({"message": "People save successfully"}), 201
 
 
     except Exception as err:
         return jsonify(f"Error: {err.args}"), 500
     
+
+@app.route("/favorite/<string:planet_nature>/<int:planet_id>", methods=["DELETE"])
+def delete_planet_on_fav(planet_id=None, planet_nature=None):
+    try:
+        
+        favorite = Favorite.query.filter_by(nature=planet_nature.upper(), nature_id=planet_id).first()
+
+        if favorite is None:
+            return jsonify({"message":f"Favorite {planet_nature} with id {planet_id} not found"}), 404 
+        else:
+            db.session.delete(favorite)
+            db.session.commit()
+            return jsonify("trabajando por usted"), 204
+
+    except Exception as err:
+        return jsonify({"message":f"Error: {err.args}"})
+
+
+@app.route("/favorite/<string:people_nature>/<int:people_id>", methods=["DELETE"])
+def delete_people_on_fav(people_id=None, people_nature=None):
+    try:
+        favorite = Favorite.query.filter_by(nature=people_nature.upper(), nature_id=people_id).first()
+        # print(list(map(lambda item: item.serialize(), favorite))[0])
+        if favorite is None:
+            return jsonify({"message":f"Favorite {people_nature} with id {people_id} not found"}), 404 
+        else:
+            db.session.delete(favorite)
+            db.session.commit()
+            return jsonify("trabajando por usted"), 204
+
+    except Exception as err:
+        return jsonify({"message":f"Error: {err.args}"})
+
+
+@app.route("/prueba")
+def prueba():
+    try:
+        # asoci = user_favorites.query.all()
+        print(user_favorites)
+        return jsonify("probando algo"), 201
+    except Exception as err:
+        return jsonify(err.args), 500
 
 
 # this only runs if `$ python src/app.py` is executed
