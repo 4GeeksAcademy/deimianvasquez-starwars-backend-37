@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, People, Planet, Favorite, user_favorites
+from models import db, User, People, Planet, Favorite
 #from models import Person
 import requests
 
@@ -158,6 +158,8 @@ def get_user_favorites():
 
         user = User()
         user = user.query.get(body["user_id"])
+        if user is None:
+            return jsonify("user not found"), 404
 
         return jsonify(user.serialize()),200
     except Exception as err:
@@ -257,15 +259,6 @@ def delete_people_on_fav(people_id=None, people_nature=None):
     except Exception as err:
         return jsonify({"message":f"Error: {err.args}"})
 
-
-@app.route("/prueba")
-def prueba():
-    try:
-        # asoci = user_favorites.query.all()
-        print(user_favorites)
-        return jsonify("probando algo"), 201
-    except Exception as err:
-        return jsonify(err.args), 500
 
 
 # this only runs if `$ python src/app.py` is executed

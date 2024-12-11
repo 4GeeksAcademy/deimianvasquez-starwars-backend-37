@@ -4,18 +4,12 @@ from enum import Enum
 db = SQLAlchemy()
 
 
-user_favorites = db.Table( 
-    'user_favorites', 
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True), 
-    db.Column('favorite_id', db.Integer, db.ForeignKey('favorite.id'), primary_key=True) )
-
-
 class User(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     fullname = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(80), nullable=False)
 
-    favorites = db.relationship('Favorite', secondary=user_favorites, back_populates='users')
+    favorites = db.relationship('Favorite',  back_populates='users', cascade="all, delete-orphan")
 
 
     def serialize(self):
@@ -23,7 +17,7 @@ class User(db.Model):
             "id": self.id,
             "fullname": self.fullname,
             "email":self.fullname,
-            "favorites": list(map(lambda item: item.serialize(), self.favorites))
+            "favorites": [favorite.serialize() for favorite in self.favorites]
         }
 
 
@@ -93,17 +87,23 @@ class Favorite(db.Model):
     nature_id = db.Column(db.Integer(), nullable=False)
     user_id = db.Column(db.Integer(), db.ForeignKey("user.id"), nullable=False)
 
-    users = db.relationship('User', secondary=user_favorites, back_populates='favorites')
+    users = db.relationship('User', back_populates='favorites')
 
-    def serialize(self):
-        return {
-            "id": self.id,
-            "nature": self.nature.value,
-            "nature_id": self.nature_id,
-            "user_id": self.nature_id,
-          
+
+    def serialize(self): 
+        nature_detail = None 
+        if self.nature == Nature.PEOPLE: 
+            nature_detail = People.query.get(self.nature_id) 
+        elif self.nature == Nature.PLANET: 
+            nature_detail = Planet.query.get(self.nature_id) 
             
-        }
+        return { 
+            "id": self.id, 
+            "nature": self.nature.value, 
+            "nature_id": self.nature_id, 
+            "user_id": self.user_id, 
+            "nature_detail": nature_detail.serialize() if nature_detail else None 
+            }
 
     
 
