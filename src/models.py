@@ -105,6 +105,3 @@ class Favorite(db.Model):
             "nature_detail": nature_detail.serialize() if nature_detail else None 
             }
 
-    
-
-
