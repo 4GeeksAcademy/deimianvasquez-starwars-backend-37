@@ -17,7 +17,8 @@ class User(db.Model):
             "id": self.id,
             "fullname": self.fullname,
             "email":self.fullname,
-            "favorites": [favorite.serialize() for favorite in self.favorites]
+            # "favorites": [favorite.serialize() for favorite in self.favorites]
+            "favorites" : list(map(lambda item: item.serialize(), self.favorites))
         }
 
 
@@ -103,5 +104,5 @@ class Favorite(db.Model):
             "nature_id": self.nature_id, 
             "user_id": self.user_id, 
             "nature_detail": nature_detail.serialize() if nature_detail else None 
-            }
+        }
 

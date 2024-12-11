@@ -230,8 +230,9 @@ def add_favorites_prople(people_id=None):
 @app.route("/favorite/<string:planet_nature>/<int:planet_id>", methods=["DELETE"])
 def delete_planet_on_fav(planet_id=None, planet_nature=None):
     try:
-        
-        favorite = Favorite.query.filter_by(nature=planet_nature.upper(), nature_id=planet_id).first()
+        body = request.json
+
+        favorite = Favorite.query.filter_by(nature=planet_nature.upper(), nature_id=planet_id, user_id=body.get("user_id")).first()
 
         if favorite is None:
             return jsonify({"message":f"Favorite {planet_nature} with id {planet_id} not found"}), 404 
